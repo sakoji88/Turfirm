@@ -84,6 +84,7 @@ namespace Turfirm
 
             dgvCatalog = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
             dgvCatalog.CellFormatting += DgvCatalog_CellFormatting;
+            dgvCatalog.DataError += Grid_DataError;
             page.Controls.Add(dgvCatalog);
             return page;
         }
@@ -112,6 +113,7 @@ namespace Turfirm
         {
             var page = new TabPage("Заказы") { BackColor = Color.White };
             dgvOrders = new DataGridView { Dock = DockStyle.Fill, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, ReadOnly = true };
+            dgvOrders.DataError += Grid_DataError;
             page.Controls.Add(dgvOrders);
 
             var footer = new Panel { Dock = DockStyle.Bottom, Height = 55 };
@@ -172,6 +174,7 @@ namespace Turfirm
             page.Controls.Add(top);
 
             dgvManage = new DataGridView { Dock = DockStyle.Fill, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
+            dgvManage.DataError += Grid_DataError;
             page.Controls.Add(dgvManage);
             LoadManageTable();
             return page;
@@ -184,27 +187,54 @@ namespace Turfirm
 
         private void DgvCatalog_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (dgvCatalog.Columns[e.ColumnIndex].Name == "BasePrice")
+            var columnName = dgvCatalog.Columns[e.ColumnIndex].Name;
+            var row = dgvCatalog.Rows[e.RowIndex];
+            var basePrice = Convert.ToDecimal(row.Cells["BasePrice"].Value);
+            var oldPriceObj = row.Cells["OldPrice"].Value;
+            var discountObj = row.Cells["DiscountPercent"].Value;
+
+            if (basePrice > 1000)
             {
-                var row = dgvCatalog.Rows[e.RowIndex];
-                var basePrice = Convert.ToDecimal(row.Cells["BasePrice"].Value);
-                var oldPriceObj = row.Cells["OldPrice"].Value;
-                var discountObj = row.Cells["DiscountPercent"].Value;
-
-                if (basePrice > 1000)
-                {
-                    row.DefaultCellStyle.BackColor = Color.Moccasin;
-                    row.DefaultCellStyle.Font = new Font(dgvCatalog.Font, FontStyle.Bold);
-                }
-
-                if (oldPriceObj != DBNull.Value && discountObj != DBNull.Value)
-                {
-                    var oldPrice = Convert.ToDecimal(oldPriceObj);
-                    var discount = Convert.ToInt32(discountObj);
-                    var newPrice = oldPrice * (100 - discount) / 100;
-                    row.Cells["BasePrice"].Value = $"{newPrice:0.##} (старая {oldPrice:0.##})";
-                }
+                row.DefaultCellStyle.BackColor = Color.Moccasin;
+                row.DefaultCellStyle.Font = new Font(dgvCatalog.Font, FontStyle.Bold);
             }
+
+            if (columnName == "BasePrice" && oldPriceObj != DBNull.Value && discountObj != DBNull.Value)
+            {
+                var oldPrice = Convert.ToDecimal(oldPriceObj);
+                var discount = Convert.ToInt32(discountObj);
+                e.Value = oldPrice * (100 - discount) / 100;
+                e.FormattingApplied = true;
+            }
+
+            if (columnName == "OldPrice" && oldPriceObj != DBNull.Value)
+            {
+                var sourceFont = e.CellStyle.Font ?? dgvCatalog.Font;
+                e.CellStyle.Font = new Font(sourceFont, FontStyle.Strikeout);
+                e.CellStyle.ForeColor = Color.Gray;
+            }
+        }
+
+        private void Grid_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            e.ThrowException = false;
+            MessageBox.Show("Некорректный формат данных в таблице. Проверьте вводимые значения.", "Ошибка данных", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        private decimal GetEffectivePrice(DataGridViewRow row)
+        {
+            var basePrice = Convert.ToDecimal(row.Cells["BasePrice"].Value);
+            var oldPriceObj = row.Cells["OldPrice"].Value;
+            var discountObj = row.Cells["DiscountPercent"].Value;
+
+            if (oldPriceObj != DBNull.Value && discountObj != DBNull.Value)
+            {
+                var oldPrice = Convert.ToDecimal(oldPriceObj);
+                var discount = Convert.ToInt32(discountObj);
+                return oldPrice * (100 - discount) / 100;
+            }
+
+            return basePrice;
         }
 
         private void BtnAddToCart_Click(object sender, EventArgs e)
@@ -221,7 +251,7 @@ namespace Turfirm
             {
                 TourId = Convert.ToInt32(dgvCatalog.CurrentRow.Cells["Id"].Value),
                 TourName = dgvCatalog.CurrentRow.Cells["Title"].Value.ToString(),
-                BasePrice = decimal.Parse(dgvCatalog.CurrentRow.Cells["BasePrice"].Value.ToString().Split(' ')[0]),
+                BasePrice = GetEffectivePrice(dgvCatalog.CurrentRow),
                 Quantity = (int)nudQty.Value,
                 Insurance = chkInsurance.Checked,
                 Transfer = chkTransfer.Checked,
