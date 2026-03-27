@@ -116,7 +116,7 @@ CREATE TABLE OrderItems (
 IF NOT EXISTS (SELECT 1 FROM Users WHERE Email='admin@turfirma.local')
 BEGIN
  INSERT INTO Users(FullName,Email,Phone,PasswordHash,PassportSeries,PassportNumber,PassportIssueDate,Role)
- VALUES ('Администратор Системы','admin@turfirma.local','79990000001',CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256',N'admin123'),2),'4510','100001','2015-04-12',3);
+ VALUES (N'Администратор Системы','admin@turfirma.local','79990000001',CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256',N'admin123'),2),'4510','100001','2015-04-12',3);
 END
 ELSE
 BEGIN
@@ -129,7 +129,7 @@ END
 IF NOT EXISTS (SELECT 1 FROM Users WHERE Email='manager@turfirma.local')
 BEGIN
  INSERT INTO Users(FullName,Email,Phone,PasswordHash,PassportSeries,PassportNumber,PassportIssueDate,Role)
- VALUES ('Менеджер Ольга','manager@turfirma.local','79990000002',CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256',N'manager123'),2),'4510','100002','2016-06-18',2);
+ VALUES (N'Менеджер Ольга','manager@turfirma.local','79990000002',CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256',N'manager123'),2),'4510','100002','2016-06-18',2);
 END
 ELSE
 BEGIN
@@ -142,7 +142,7 @@ END
 IF NOT EXISTS (SELECT 1 FROM Users WHERE Email='user@turfirma.local')
 BEGIN
  INSERT INTO Users(FullName,Email,Phone,PasswordHash,PassportSeries,PassportNumber,PassportIssueDate,Role)
- VALUES ('Иван Петров','user@turfirma.local','79990000003',CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256',N'user12345'),2),'4510','100003','2017-03-20',1);
+ VALUES (N'Иван Петров','user@turfirma.local','79990000003',CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256',N'user12345'),2),'4510','100003','2017-03-20',1);
 END
 ELSE
 BEGIN
@@ -155,7 +155,13 @@ END
 IF NOT EXISTS (SELECT 1 FROM Guides)
 BEGIN
  INSERT INTO Guides(FullName,Phone,IsActive)
- VALUES ('Сергей Иванов','79991110001',1), ('Мария Лебедева','79991110002',1), ('Алексей Волков','79991110003',1);
+ VALUES (N'Сергей Иванов','79991110001',1), (N'Мария Лебедева','79991110002',1), (N'Алексей Волков','79991110003',1);
+END
+ELSE
+BEGIN
+ UPDATE Guides SET FullName = N'Сергей Иванов' WHERE Phone='79991110001';
+ UPDATE Guides SET FullName = N'Мария Лебедева' WHERE Phone='79991110002';
+ UPDATE Guides SET FullName = N'Алексей Волков' WHERE Phone='79991110003';
 END
 
 IF NOT EXISTS (SELECT 1 FROM Transports)
@@ -167,17 +173,30 @@ END
 IF NOT EXISTS (SELECT 1 FROM AdditionalServices)
 BEGIN
  INSERT INTO AdditionalServices(Name,FeeType,Value)
- VALUES ('Страховка','percent',8), ('Трансфер (до 30 км)','fixed',50), ('Трансфер (30+ км)','fixed',120);
+ VALUES (N'Страховка','percent',8), (N'Трансфер (до 30 км)','fixed',50), (N'Трансфер (30+ км)','fixed',120);
+END
+ELSE
+BEGIN
+ UPDATE AdditionalServices SET Name = N'Страховка' WHERE Id = 1;
+ UPDATE AdditionalServices SET Name = N'Трансфер (до 30 км)' WHERE Id = 2;
+ UPDATE AdditionalServices SET Name = N'Трансфер (30+ км)' WHERE Id = 3;
 END
 
 IF NOT EXISTS (SELECT 1 FROM Tours)
 BEGIN
  INSERT INTO Tours(Title,Direction,TourType,StartDate,EndDate,MaxGroupSize,BookedSeats,BasePrice,OldPrice,DiscountPercent,ImagePath,Description)
  VALUES
- ('Сочи: Морской релакс','Сочи','Пляжный','2026-05-10','2026-05-17',20,5,980,1200,18,'https://images.unsplash.com/photo-1507525428034-b723cf961d3e','Пляжный отдых на Черном море'),
- ('Алтай: Активные горы','Алтай','Активный','2026-06-01','2026-06-08',15,7,1350,1550,13,'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b','Трекинг и активные маршруты'),
- ('Санкт-Петербург: История','Санкт-Петербург','Экскурсионный','2026-05-20','2026-05-24',25,10,890,NULL,NULL,'https://images.unsplash.com/photo-1513326738677-b964603b136d','Классические экскурсии по музеям'),
- ('Байкал: Эко-экспедиция','Байкал','Активный','2026-07-12','2026-07-20',18,3,1490,1700,12,'https://images.unsplash.com/photo-1472396961693-142e6e269027','Природа Байкала и прогулки');
+ (N'Сочи: Морской релакс',N'Сочи',N'Пляжный','2026-05-10','2026-05-17',20,5,980,1200,18,'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',N'Пляжный отдых на Черном море'),
+ (N'Алтай: Активные горы',N'Алтай',N'Активный','2026-06-01','2026-06-08',15,7,1350,1550,13,'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b',N'Трекинг и активные маршруты'),
+ (N'Санкт-Петербург: История',N'Санкт-Петербург',N'Экскурсионный','2026-05-20','2026-05-24',25,10,890,NULL,NULL,'https://images.unsplash.com/photo-1513326738677-b964603b136d',N'Классические экскурсии по музеям'),
+ (N'Байкал: Эко-экспедиция',N'Байкал',N'Активный','2026-07-12','2026-07-20',18,3,1490,1700,12,'https://images.unsplash.com/photo-1472396961693-142e6e269027',N'Природа Байкала и прогулки');
+END
+ELSE
+BEGIN
+ UPDATE Tours SET Title = N'Сочи: Морской релакс', Direction = N'Сочи', TourType = N'Пляжный', Description = N'Пляжный отдых на Черном море' WHERE Id = 1;
+ UPDATE Tours SET Title = N'Алтай: Активные горы', Direction = N'Алтай', TourType = N'Активный', Description = N'Трекинг и активные маршруты' WHERE Id = 2;
+ UPDATE Tours SET Title = N'Санкт-Петербург: История', Direction = N'Санкт-Петербург', TourType = N'Экскурсионный', Description = N'Классические экскурсии по музеям' WHERE Id = 3;
+ UPDATE Tours SET Title = N'Байкал: Эко-экспедиция', Direction = N'Байкал', TourType = N'Активный', Description = N'Природа Байкала и прогулки' WHERE Id = 4;
 END
 ");
         }

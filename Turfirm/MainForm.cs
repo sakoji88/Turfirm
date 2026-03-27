@@ -218,7 +218,7 @@ namespace Turfirm
         private void Grid_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
             e.ThrowException = false;
-            MessageBox.Show("Некорректный формат данных в таблице. Проверьте вводимые значения.", "Ошибка данных", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            e.Cancel = true;
         }
 
         private decimal GetEffectivePrice(DataGridViewRow row)
