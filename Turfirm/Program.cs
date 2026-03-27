@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
+using Turfirm.Infrastructure;
 using Turfirm.Services;
 
 namespace Turfirm
@@ -16,7 +17,22 @@ namespace Turfirm
             Application.ThreadException += HandleThreadException;
             AppDomain.CurrentDomain.UnhandledException += HandleUnhandledException;
 
-            DatabaseInitializer.EnsureCreatedAndSeeded();
+            try
+            {
+                Db.Initialize();
+                DatabaseInitializer.EnsureCreatedAndSeeded();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Не удалось подключиться к SQL Server/LocalDB.\n" +
+                    "Проверьте имя экземпляра в App.config (ключ SqlInstance).\n\n" +
+                    $"Техническая информация: {ex.Message}",
+                    "Ошибка подключения к БД",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
             Application.Run(new LoginForm());
         }
 
