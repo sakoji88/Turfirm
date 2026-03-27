@@ -113,13 +113,43 @@ CREATE TABLE OrderItems (
         private static void Seed(SqlConnection connection)
         {
             ExecuteBatch(connection, @"
-IF NOT EXISTS (SELECT 1 FROM Users)
+IF NOT EXISTS (SELECT 1 FROM Users WHERE Email='admin@turfirma.local')
 BEGIN
  INSERT INTO Users(FullName,Email,Phone,PasswordHash,PassportSeries,PassportNumber,PassportIssueDate,Role)
- VALUES
- ('Администратор Системы','admin@turfirma.local','79990000001',CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256','admin123'),2),'4510','100001','2015-04-12',3),
- ('Менеджер Ольга','manager@turfirma.local','79990000002',CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256','manager123'),2),'4510','100002','2016-06-18',2),
- ('Иван Петров','user@turfirma.local','79990000003',CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256','user12345'),2),'4510','100003','2017-03-20',1);
+ VALUES ('Администратор Системы','admin@turfirma.local','79990000001',CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256',N'admin123'),2),'4510','100001','2015-04-12',3);
+END
+ELSE
+BEGIN
+ UPDATE Users
+    SET PasswordHash = CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256',N'admin123'),2),
+        Role = 3
+  WHERE Email='admin@turfirma.local';
+END
+
+IF NOT EXISTS (SELECT 1 FROM Users WHERE Email='manager@turfirma.local')
+BEGIN
+ INSERT INTO Users(FullName,Email,Phone,PasswordHash,PassportSeries,PassportNumber,PassportIssueDate,Role)
+ VALUES ('Менеджер Ольга','manager@turfirma.local','79990000002',CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256',N'manager123'),2),'4510','100002','2016-06-18',2);
+END
+ELSE
+BEGIN
+ UPDATE Users
+    SET PasswordHash = CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256',N'manager123'),2),
+        Role = 2
+  WHERE Email='manager@turfirma.local';
+END
+
+IF NOT EXISTS (SELECT 1 FROM Users WHERE Email='user@turfirma.local')
+BEGIN
+ INSERT INTO Users(FullName,Email,Phone,PasswordHash,PassportSeries,PassportNumber,PassportIssueDate,Role)
+ VALUES ('Иван Петров','user@turfirma.local','79990000003',CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256',N'user12345'),2),'4510','100003','2017-03-20',1);
+END
+ELSE
+BEGIN
+ UPDATE Users
+    SET PasswordHash = CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256',N'user12345'),2),
+        Role = 1
+  WHERE Email='user@turfirma.local';
 END
 
 IF NOT EXISTS (SELECT 1 FROM Guides)

@@ -9,6 +9,9 @@ namespace Turfirm.Services
     {
         public CurrentSession Login(string login, string password)
         {
+            var normalizedLogin = (login ?? string.Empty).Trim();
+            var normalizedPassword = (password ?? string.Empty).Trim();
+
             using (var connection = Db.Open(Db.AppConnection))
             using (var command = new SqlCommand(@"
 SELECT TOP 1 Id, FullName, Email, Phone, Role
@@ -16,8 +19,8 @@ FROM Users
 WHERE (Email = @login OR Phone = @login)
   AND PasswordHash = CONVERT(NVARCHAR(256),HASHBYTES('SHA2_256',@password),2)", connection))
             {
-                command.Parameters.AddWithValue("@login", login);
-                command.Parameters.AddWithValue("@password", password);
+                command.Parameters.AddWithValue("@login", normalizedLogin);
+                command.Parameters.AddWithValue("@password", normalizedPassword);
 
                 using (var reader = command.ExecuteReader())
                 {
