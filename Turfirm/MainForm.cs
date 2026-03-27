@@ -80,12 +80,12 @@ namespace Turfirm
             btnAdd.Click += BtnAddToCart_Click;
 
             pnl.Controls.AddRange(new Control[] { cbDirection, cbType, txtSearch, nudPrice, btnFilter, nudQty, chkInsurance, chkTransfer, btnAdd });
-            page.Controls.Add(pnl);
 
             dgvCatalog = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
             dgvCatalog.CellFormatting += DgvCatalog_CellFormatting;
             dgvCatalog.DataError += Grid_DataError;
             page.Controls.Add(dgvCatalog);
+            page.Controls.Add(pnl);
             return page;
         }
 
