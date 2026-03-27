@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Turfirm.Infrastructure
@@ -42,6 +43,7 @@ namespace Turfirm.Infrastructure
             Exception lastError = null;
             foreach (var instance in candidates.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct(StringComparer.OrdinalIgnoreCase))
             {
+                TryPrepareInstance(instance);
                 var masterCs = BuildConnectionString(instance, "master");
                 try
                 {
@@ -80,6 +82,64 @@ namespace Turfirm.Infrastructure
         private static string BuildConnectionString(string instance, string database)
         {
             return $"Server={instance};Integrated Security=true;Initial Catalog={database};TrustServerCertificate=True;Connect Timeout=5";
+        }
+
+        private static void TryPrepareInstance(string instance)
+        {
+            if (!instance.StartsWith("(localdb)", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            var name = ExtractLocalDbName(instance);
+            if (string.IsNullOrWhiteSpace(name))
+                return;
+
+            // Не выбрасываем исключение здесь — это best-effort подготовка экземпляра.
+            // Если не получится, обычная попытка подключения ниже даст понятную ошибку.
+            if (RunTool("sqllocaldb", $"i {name}") != 0)
+                RunTool("sqllocaldb", $"create {name}");
+
+            RunTool("sqllocaldb", $"start {name}");
+        }
+
+        private static string ExtractLocalDbName(string instance)
+        {
+            var idx = instance.IndexOf('\\');
+            return idx < 0 || idx == instance.Length - 1
+                ? string.Empty
+                : instance.Substring(idx + 1);
+        }
+
+        private static int RunTool(string fileName, string arguments)
+        {
+            try
+            {
+                using (var process = new Process())
+                {
+                    process.StartInfo = new ProcessStartInfo
+                    {
+                        FileName = fileName,
+                        Arguments = arguments,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    };
+
+                    process.Start();
+                    process.WaitForExit(3000);
+                    if (!process.HasExited)
+                    {
+                        process.Kill();
+                        return -1;
+                    }
+
+                    return process.ExitCode;
+                }
+            }
+            catch
+            {
+                return -1;
+            }
         }
 
         private static string ReadSetting(string key, string fallback)

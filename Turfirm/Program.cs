@@ -26,6 +26,8 @@ namespace Turfirm
             {
                 MessageBox.Show(
                     "Не удалось подключиться к SQL Server/LocalDB.\n" +
+                    "Убедитесь, что установлен LocalDB или SQL Server Express.\n" +
+                    "Для LocalDB можно выполнить: sqllocaldb create MSSQLLocalDB && sqllocaldb start MSSQLLocalDB.\n" +
                     "Проверьте имя экземпляра в App.config (ключ SqlInstance).\n\n" +
                     $"Техническая информация: {ex.Message}",
                     "Ошибка подключения к БД",
